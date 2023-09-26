@@ -1,17 +1,39 @@
 use cosmwasm_std::Uint128;
 use std::vec::Vec;
 
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Listing {
-    amount: u64,
-    price: Uint128, // price per token
-    seller: String
+    pub amount: u128,
+    pub price: Uint128, // price per token
+    pub seller: String
 }
 
 pub struct InstantiateMsg {
-    denom: String,
-    fee: Uint128,
-    symbol: String,
-    decimals: u8,
-    name: String,
-    listed: Vec<Listing>
+    pub denom: String,
+    pub fee: Uint128,
+    pub symbol: String,
+    pub decimals: u8,
+    pub name: String,
+    pub listed: Vec<Listing>
+}
+
+pub enum ExecuteMsg {
+    List {
+        price: Uint128
+    },
+    Buy {
+        amount: u128,
+    },
+    Delist {},
+    // LiquidatePool {}
+}
+
+pub enum QueryMsg {
+    GetState {},
+    GetOwned {
+        address: String
+    },
+    GetListed {}
 }
