@@ -1,8 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, to_binary, StdResult, Binary};
 use cw2::set_contract_version;
-
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{State, STATE};
@@ -33,7 +32,7 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
@@ -46,7 +45,7 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: DepsMut, _env: Env, msg: QueryMsg) -> Result<Response, ContractError> {
+pub fn query(deps: DepsMut, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetOwned { address } => {
             let state = STATE.load(deps.storage)?;
@@ -56,12 +55,12 @@ pub fn query(deps: DepsMut, _env: Env, msg: QueryMsg) -> Result<Response, Contra
                     owned += listing.amount;
                 }
             }
-            Ok(Response::new().add_attribute("Owned", format!("{}", owned)))
+            to_binary(&owned)
         },
-        QueryMsg::GetListed { } => {Ok(Response::new().add_attribute("Listed", format!("{:?}", STATE.load(deps.storage)?.listed)))},
+        QueryMsg::GetListed { } => {to_binary(&STATE.load(deps.storage).unwrap().listed)},
         QueryMsg::GetState {} => {
             let state = STATE.load(deps.storage)?;
-            Ok(Response::new().add_attribute("state", format!("{:?}", state)))
+            to_binary(&state)
         }
     }
 }

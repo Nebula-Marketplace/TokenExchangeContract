@@ -37,7 +37,7 @@ pub fn list(amount: u128, price: Uint128, sender: String, deps: DepsMut) -> Resu
 }
 
 pub fn buy(amount: u128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Result<Response, ContractError> {
-    let mut state = STATE.load(deps.storage)?;
+    let state = STATE.load(deps.storage)?;
     let mut listed = state.listed;
     let mut suitable = Listing { amount: 0, price: Uint128::zero(), seller: "".to_string()};
     // make sure there even is a listing
@@ -92,14 +92,14 @@ pub fn buy(amount: u128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Res
 }
 
 pub fn delist(sender: String, deps: DepsMut) -> Result<Response, ContractError> {
-    let mut state = STATE.load(deps.storage)?;
+    let state = STATE.load(deps.storage)?;
     let mut listed = state.listed;
     let mut suitable: Option<Listing> = None;
     // make sure there even is a listing
     if listed.len() == 0 {
         return Err(ContractError::NotFound {});
     }
-    for (index, listing) in listed.iter().enumerate() {
+    for (_index, listing) in listed.iter().enumerate() {
         // check if the sender is the owner
         if listing.seller != sender {
             continue;
