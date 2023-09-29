@@ -10,6 +10,7 @@ pub struct Listing {
     pub seller: String
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct InstantiateMsg {
     pub denom: String,
     pub fee: Uint128,
@@ -19,6 +20,7 @@ pub struct InstantiateMsg {
     pub listed: Vec<Listing>
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ExecuteMsg {
     List {
         price: Uint128
@@ -30,6 +32,7 @@ pub enum ExecuteMsg {
     // LiquidatePool {}
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum QueryMsg {
     GetState {},
     GetOwned {
