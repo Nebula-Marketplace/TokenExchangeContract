@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, to_binary, StdResult, Binary};
+use cosmwasm_std::{DepsMut, Deps, Env, MessageInfo, Response, to_binary, StdResult, Binary};
 use cw2::set_contract_version;
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -44,23 +44,22 @@ pub fn execute(
     }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: DepsMut, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::GetOwned { address } => {
-            let state = STATE.load(deps.storage)?;
-            let mut owned: u128 = 0;
-            for listing in state.listed {
-                if listing.seller == address {
-                    owned += listing.amount;
-                }
-            }
-            to_binary(&owned)
-        },
-        QueryMsg::GetListed { } => {to_binary(&STATE.load(deps.storage).unwrap().listed)},
-        QueryMsg::GetState {} => {
-            let state = STATE.load(deps.storage)?;
-            to_binary(&state)
+fn getOwned(address: String, deps: Deps) -> u128 {
+    let state = STATE.load(deps.storage).unwrap();
+    let mut owned: u128 = 0;
+    for listing in state.listed {
+        if listing.seller == address {
+            owned += listing.amount;
         }
+    }
+    return owned
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetOwned { address } => to_binary(&getOwned(address, deps)),
+        QueryMsg::GetListed { } => to_binary(&STATE.load(deps.storage).unwrap().listed),
+        QueryMsg::GetState {} => to_binary(&STATE.load(deps.storage)?)
     }
 }
