@@ -4,10 +4,11 @@ use cosmwasm_std::Uint128;
 
 use cw20::Cw20ExecuteMsg;
 
-
 use crate::msg::Listing;
 use crate::state::STATE;
 use crate::error::ContractError;
+
+use std::vec::Vec;
 
 const FEE: f64 = 0.03;
 

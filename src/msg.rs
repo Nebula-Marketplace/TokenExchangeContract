@@ -1,5 +1,4 @@
 use cosmwasm_std::Uint128;
-use std::vec::Vec;
 
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +16,6 @@ pub struct InstantiateMsg {
     pub symbol: String,
     pub decimals: u8,
     pub name: String,
-    pub listed: Vec<Listing>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
