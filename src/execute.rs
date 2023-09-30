@@ -37,7 +37,7 @@ pub fn list(amount: u128, price: Uint128, sender: String, deps: DepsMut) -> Resu
     Ok(Response::default())
 }
 
-pub fn buy(amount: i128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Result<Response, ContractError> {
+pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     let mut listed = state.listed;
     let mut suitable = Listing { amount: 0, price: Uint128::zero(), seller: "".to_string()};
@@ -45,7 +45,7 @@ pub fn buy(amount: i128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Res
     if listed.len() == 0 {
         return Err(ContractError::NotFound {});
     }
-    let ammount_fixed = amount as u128; // convert to u128
+    let ammount_fixed = amount.u128(); // convert to u128
     for listing in listed.clone() {
         // check if the amount is valid
         if listing.amount < ammount_fixed {

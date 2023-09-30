@@ -24,7 +24,7 @@ pub enum ExecuteMsg {
         price: Uint128
     },
     Buy {
-        amount: i128,
+        amount: Uint128,
     },
     Delist {},
     // LiquidatePool {}
