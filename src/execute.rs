@@ -37,7 +37,7 @@ pub fn list(amount: u128, price: Uint128, sender: String, deps: DepsMut) -> Resu
     Ok(Response::default())
 }
 
-pub fn buy(amount: u128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Result<Response, ContractError> {
+pub fn buy(amount: i128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     let mut listed = state.listed;
     let mut suitable = Listing { amount: 0, price: Uint128::zero(), seller: "".to_string()};
@@ -45,13 +45,14 @@ pub fn buy(amount: u128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Res
     if listed.len() == 0 {
         return Err(ContractError::NotFound {});
     }
+    let ammount_fixed = amount as u128; // convert to u128
     for listing in listed.clone() {
         // check if the amount is valid
-        if listing.amount < amount {
+        if listing.amount < ammount_fixed {
             continue;
         }
         // check if order is correctly priced
-        if (listing.price.u128() * amount) + (listing.price.u128() * FEE as u128) > funds[0].amount.u128()  {
+        if (listing.price.u128() * ammount_fixed) + (listing.price.u128() * FEE as u128) > funds[0].amount.u128()  {
             continue;
         }
         suitable = listing; // get the first suitable listing based on the requirements
@@ -63,21 +64,21 @@ pub fn buy(amount: u128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Res
 
     suitable = suitable;
 
-    if suitable.amount > amount {
+    if suitable.amount > ammount_fixed {
         listed = delete(listed, &suitable.clone()); // remove from the vec so it cant be accidentally replicated
-        suitable.amount -= amount;
+        suitable.amount -= ammount_fixed;
         // listed.push(suitable);
         listed.sort_by(|x, y| x.price.cmp(&y.price)); // put everything back into order
-    } else if suitable.amount == amount {
+    } else if suitable.amount == ammount_fixed {
         delete(listed, &suitable);
-    } else if suitable.amount < amount { // this should be unreachable, however we need to be 100% sure
+    } else if suitable.amount < ammount_fixed { // this should be unreachable, however we need to be 100% sure
         return Err(ContractError::InvalidAmount {});
     }
 
     let mut resp = Response::new();
     let transfer = Cw20ExecuteMsg::Transfer {
         recipient: sender,
-        amount: Uint128::from(amount),
+        amount: Uint128::from(ammount_fixed),
     };
     let execute_msg = WasmMsg::Execute {
         contract_addr: state.denom,
