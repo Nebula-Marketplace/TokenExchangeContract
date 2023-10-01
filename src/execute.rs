@@ -53,7 +53,7 @@ pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> 
         }
         // check if order is correctly priced
         // these type conversions are unholy and i hate them
-        if (listing.price.u128() * (ammount_fixed/(10**&state.decimals) as u128)) + (listing.price.u128() * ((Uint128::from(ammount_fixed/(10**&state.decimals) as u128)) * Decimal::from_str("0.03").unwrap()).u128()) > funds[0].amount.u128()  {
+        if (listing.price.u128() * (ammount_fixed/(10**&state.decimals) as u128)) > funds[0].amount.u128()  {
             continue;
         }
         if listing.amount > ammount_fixed {
