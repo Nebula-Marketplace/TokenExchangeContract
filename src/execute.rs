@@ -8,6 +8,7 @@ use crate::msg::Listing;
 use crate::state::STATE;
 use crate::error::ContractError;
 
+use core::panic;
 use std::str::FromStr;
 use std::vec::Vec;
 
@@ -39,15 +40,15 @@ pub fn list(amount: u128, price: Uint128, sender: String, deps: DepsMut) -> Resu
 pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> Result<Response, ContractError> {
     let state = STATE.load(deps.storage)?;
     let mut listed = state.listed;
-    let mut suitable = Listing { amount: 0, price: Uint128::zero(), seller: "".to_string()};
     // make sure there even is a listing
     if listed.len() == 0 {
         return Err(ContractError::NotFound {});
     }
     let ammount_fixed = amount.u128(); // convert to u128
-    for listing in listed.clone() {
+    let mut resp = Response::new();
+    for mut listing in listed.clone() {
         // check if the amount is valid
-        if listing.amount < ammount_fixed {
+        if &listing.amount < &ammount_fixed {
             continue;
         }
         // check if order is correctly priced
@@ -55,37 +56,30 @@ pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> 
         if (listing.price.u128() * (ammount_fixed/(10**&state.decimals) as u128)) + (listing.price.u128() * ((Uint128::from(ammount_fixed/(10**&state.decimals) as u128)) * Decimal::from_str("0.03").unwrap()).u128()) > funds[0].amount.u128()  {
             continue;
         }
-        suitable = listing; // get the first suitable listing based on the requirements
+        if listing.amount > ammount_fixed {
+            listed = delete(listed, &listing.clone()); // remove from the vec so it cant be accidentally replicated
+            listing.amount -= ammount_fixed;
+            // listed.push(suitable);
+            listed.sort_by(|x, y| x.price.cmp(&y.price)); // put everything back into order
+        } else if listing.amount == ammount_fixed {
+            delete(listed, &listing);
+        } else if listing.amount < ammount_fixed { // this should be unreachable, however we need to be 100% sure
+            return Err(ContractError::InvalidAmount {});
+        }
+        resp = resp.add_message(BankMsg::Send {
+            to_address: sender,
+            amount: vec![Coin {
+                denom: state.denom,
+                amount: amount,
+            }],
+        });
+        resp = resp.add_message(BankMsg::Send {
+            to_address: listing.seller,
+            amount: funds,
+        });
+        return Ok(resp)
     }
-
-    if suitable == (Listing { amount: 0, price: Uint128::zero(), seller: "".to_string()}) {
-        return Err(ContractError::UnknownError {});
-    }
-
-    if suitable.amount > ammount_fixed {
-        listed = delete(listed, &suitable.clone()); // remove from the vec so it cant be accidentally replicated
-        suitable.amount -= ammount_fixed;
-        // listed.push(suitable);
-        listed.sort_by(|x, y| x.price.cmp(&y.price)); // put everything back into order
-    } else if suitable.amount == ammount_fixed {
-        delete(listed, &suitable);
-    } else if suitable.amount < ammount_fixed { // this should be unreachable, however we need to be 100% sure
-        return Err(ContractError::InvalidAmount {});
-    }
-
-    let mut resp = Response::new();
-    resp = resp.add_message(BankMsg::Send {
-        to_address: sender,
-        amount: vec![Coin {
-            denom: state.denom,
-            amount: amount,
-        }],
-    });
-    resp = resp.add_message(BankMsg::Send {
-        to_address: suitable.seller,
-        amount: funds,
-    });
-    Ok(resp)
+    panic!()
 }
 
 pub fn delist(sender: String, deps: DepsMut) -> Result<Response, ContractError> {
