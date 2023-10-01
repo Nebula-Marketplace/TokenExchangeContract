@@ -52,7 +52,8 @@ pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> 
             continue;
         }
         // check if order is correctly priced
-        if (listing.price.u128() * ammount_fixed) + (listing.price.u128() * FEE as u128) > funds[0].amount.u128()  {
+        // these type conversions are unholy and i hate them
+        if (listing.price.u128() * (ammount_fixed/(10**&state.decimals) as u128)) + (listing.price.u128() * (((ammount_fixed/(10**&state.decimals) as u128)) as f64 * 0.03) as u128) > funds[0].amount.u128()  {
             continue;
         }
         suitable = listing; // get the first suitable listing based on the requirements
@@ -61,8 +62,6 @@ pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> 
     if suitable == (Listing { amount: 0, price: Uint128::zero(), seller: "".to_string()}) {
         return Err(ContractError::UnknownError {});
     }
-
-    suitable = suitable;
 
     if suitable.amount > ammount_fixed {
         listed = delete(listed, &suitable.clone()); // remove from the vec so it cant be accidentally replicated
@@ -76,16 +75,13 @@ pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> 
     }
 
     let mut resp = Response::new();
-    let transfer = Cw20ExecuteMsg::Transfer {
-        recipient: sender,
-        amount: Uint128::from(ammount_fixed),
-    };
-    let execute_msg = WasmMsg::Execute {
-        contract_addr: state.denom,
-        msg: to_binary(&transfer)?,
-        funds: vec![],
-    };
-    resp = resp.add_message(execute_msg);
+    resp = resp.add_message(BankMsg::Send {
+        to_address: sender,
+        amount: vec![Coin {
+            denom: state.denom,
+            amount: amount,
+        }],
+    });
     resp = resp.add_message(BankMsg::Send {
         to_address: suitable.seller,
         amount: funds,
