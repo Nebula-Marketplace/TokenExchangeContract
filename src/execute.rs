@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, DepsMut, Response, BankMsg, Coin, WasmMsg};
+use cosmwasm_std::{to_binary, DepsMut, Response, BankMsg, Coin, Decimal};
 use cosmwasm_std::WasmMsg::Execute as MsgExecuteContract;
 use cosmwasm_std::Uint128;
 
@@ -8,9 +8,8 @@ use crate::msg::Listing;
 use crate::state::STATE;
 use crate::error::ContractError;
 
+use std::str::FromStr;
 use std::vec::Vec;
-
-const FEE: f64 = 0.03;
 
 fn delete<T>(vector: Vec<T>, target: &T) -> Vec<T> where T: PartialEq {
     let mut vec = vector;
@@ -53,7 +52,7 @@ pub fn buy(amount: Uint128, sender: String, funds: Vec<Coin>, deps: DepsMut) -> 
         }
         // check if order is correctly priced
         // these type conversions are unholy and i hate them
-        if (listing.price.u128() * (ammount_fixed/(10**&state.decimals) as u128)) + (listing.price.u128() * (((ammount_fixed/(10**&state.decimals) as u128)) as f64 * 0.03) as u128) > funds[0].amount.u128()  {
+        if (listing.price.u128() * (ammount_fixed/(10**&state.decimals) as u128)) + (listing.price.u128() * ((Uint128::from(ammount_fixed/(10**&state.decimals) as u128)) * Decimal::from_str("0.03").unwrap()).u128()) > funds[0].amount.u128()  {
             continue;
         }
         suitable = listing; // get the first suitable listing based on the requirements
