@@ -1,5 +1,5 @@
 # Instantiation
-To instantiate, use code 2921 on testnet, and [MAINNET] on mainnet. Here is an example instantiation message:
+To instantiate, use code 2923 on testnet, and [MAINNET] on mainnet. Here is an example instantiation message:
 ```js
 {
     "denom":"factory/inj1d0zfq42409a5mhdagjutl8u6u9rgcm4h8zfmfq/nbla",
