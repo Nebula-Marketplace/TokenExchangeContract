@@ -15,7 +15,7 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    set_contract_version(deps.storage, "Vanguards Token Exchange", "v1")?;
+    set_contract_version(deps.storage, "Nebula Token Exchange", "v1")?;
 
     let state = State {
         denom: msg.denom,
